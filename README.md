@@ -1,4 +1,4 @@
-# PRwalk
+# pr walk
 
 vs code / cursor extension that turns a PR into a guided walkthrough! intended to make review of agent code easier :)
 
