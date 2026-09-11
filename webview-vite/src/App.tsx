@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useWebviewMessage } from './hooks/useWebviewMessage';
 import { ModelSetupInfo, WebviewData } from './types';
-import './App.css';
 import Header from './components/Header';
 import ChapterList from './components/ChapterList';
 import ChapterView from './components/ChapterView';
 import Loading from './components/Loading';
 import SetupModel from './components/SetupModel';
+import { reviewSteps } from './reviewSteps';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { demoData } from './demoData';
+import { getVsCodeApi } from './vscodeApi';
 
 function App() {
   const { message, sendMessage } = useWebviewMessage();
@@ -19,6 +22,15 @@ function App() {
   const [modelLabel, setModelLabel] = useState<string | undefined>();
   const [setup, setSetup] = useState<ModelSetupInfo | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (import.meta.env.DEV && !getVsCodeApi()) {
+      setData(demoData);
+      setSelectedChapterId(demoData.chapters[0].id);
+      setModelLabel('gemini');
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!message) return;
@@ -73,17 +85,15 @@ function App() {
 
   if (setup && !data) {
     return (
-      <div className="app">
+      <div className="flex h-full flex-col bg-background">
         <Header prMetadata={null} />
-        <div className="content">
-          <div className="setup-page">
-            <SetupModel
-              setup={setup}
-              error={setupError}
-              onSave={saveModel}
-              onOpenUrl={(url) => sendMessage({ type: 'openUrl', url })}
-            />
-          </div>
+        <div className="flex flex-1 items-center justify-center overflow-auto p-8">
+          <SetupModel
+            setup={setup}
+            error={setupError}
+            onSave={saveModel}
+            onOpenUrl={(url) => sendMessage({ type: 'openUrl', url })}
+          />
         </div>
       </div>
     );
@@ -91,13 +101,11 @@ function App() {
 
   if (error) {
     return (
-      <div className="app">
+      <div className="flex h-full flex-col bg-background">
         <Header prMetadata={null} />
-        <div className="content">
-          <div className="error">
-            <h2>Error</h2>
-            <p>{error}</p>
-          </div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8">
+          <h2 className="text-base font-semibold text-destructive">Error</h2>
+          <p className="max-w-xl text-center text-sm">{error}</p>
         </div>
       </div>
     );
@@ -105,10 +113,10 @@ function App() {
 
   if (!data) {
     return (
-      <div className="app">
+      <div className="flex h-full flex-col bg-background">
         <Header prMetadata={null} />
-        <div className="content">
-          <p>No PR data loaded</p>
+        <div className="flex flex-1 items-center justify-center p-8 text-sm text-muted-foreground">
+          No PR data loaded
         </div>
       </div>
     );
@@ -117,7 +125,7 @@ function App() {
   const selectedChapter = data.chapters.find((chapter) => chapter.id === selectedChapterId);
 
   return (
-    <div className="app">
+    <div className="relative flex h-full flex-col bg-background">
       <Header
         prMetadata={data.prMetadata}
         modelLabel={modelLabel}
@@ -125,15 +133,23 @@ function App() {
         onCustomize={(userPrompt) => sendMessage({ type: 'customize', userPrompt })}
         onChangeModel={() => sendMessage({ type: 'configureModel' })}
       />
-      <div className="content">
-        <div className="left-pane">
-          <div className="summary">
-            <h3>What changed</h3>
-            <p>{data.summary}</p>
+      <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
+        <ResizablePanel defaultSize="32" minSize="22" className="flex min-h-0 flex-col">
+          <div className="border-b border-border bg-muted px-4 py-3">
+            <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+              What changed
+            </h3>
+            <p className="text-sm leading-relaxed">{data.summary}</p>
             {data.howToReview && (
               <>
-                <h3 className="review-heading">How to review</h3>
-                <p>{data.howToReview}</p>
+                <h3 className="mt-4 mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  How to review
+                </h3>
+                <ol className="list-decimal space-y-1.5 pl-4 text-sm leading-relaxed">
+                  {reviewSteps(data.howToReview).map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
               </>
             )}
           </div>
@@ -142,8 +158,9 @@ function App() {
             selectedChapterId={selectedChapterId}
             onSelectChapter={setSelectedChapterId}
           />
-        </div>
-        <div className="right-pane">
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize="68" minSize="30" className="flex min-h-0 flex-col">
           {selectedChapter && (
             <ChapterView
               chapter={selectedChapter}
@@ -151,10 +168,10 @@ function App() {
               files={data.files}
             />
           )}
-        </div>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
       {setup && (
-        <div className="setup-overlay">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 p-8">
           <SetupModel
             setup={setup}
             error={setupError}

@@ -1,4 +1,7 @@
+import { ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { FileContents, WalkthroughChapter, DiffHunk } from '../types';
+import { fileLabel } from '../reviewSteps';
 
 interface ChapterViewProps {
   chapter: WalkthroughChapter;
@@ -6,49 +9,62 @@ interface ChapterViewProps {
   files: Record<string, FileContents>;
 }
 
-function ChapterView({ chapter, hunks, files }: ChapterViewProps) {
+function ChapterView({ chapter, hunks }: ChapterViewProps) {
   const chapterHunks = chapter.hunkIndices
     .map((index) => hunks[index])
     .filter((hunk): hunk is DiffHunk => Boolean(hunk));
+  const groups = groupHunks(chapterHunks);
 
   return (
-    <div className="code-view">
-      <div className="code-header">
-        <h3>{chapter.title}</h3>
-        <span className="line-range">
+    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3 pb-6">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="text-sm font-semibold">{chapter.title}</h3>
+        <span className="shrink-0 text-xs text-muted-foreground">
           {chapter.filePaths.length} file{chapter.filePaths.length === 1 ? '' : 's'}
           {chapterHunks.length ? ` · ${chapterHunks.length} diffs` : ''}
         </span>
       </div>
-      <div className="code-explanation">
+      <p className="mb-1 border-l-2 border-primary bg-muted px-3 py-2.5 text-sm leading-relaxed">
         {chapter.briefing}
-      </div>
-      {chapterHunks.map((hunk, index) => {
-        const fileData = files[hunk.filePath];
-        const postLineCount = fileData?.postContent
-          ? fileData.postContent.split('\n').length
-          : 0;
-
-        return (
-          <div key={`${hunk.filePath}:${hunk.newStart}:${index}`} className="chapter-hunk">
-            <div className="code-header">
-              <h3>{hunk.filePath}</h3>
-              <span className="line-range">
-                Lines {hunk.oldStart}-{hunk.oldStart + hunk.oldLines} → {hunk.newStart}-{hunk.newStart + hunk.newLines}
-                {postLineCount > 0 ? ` · ${postLineCount} lines in file` : ''}
-              </span>
-            </div>
-            <div className="diff-view">
-              <pre
-                className="diff-content"
-                dangerouslySetInnerHTML={{ __html: highlightDiff(hunk.content) }}
-              />
-            </div>
-          </div>
-        );
-      })}
+      </p>
+      {groups.map((group) => (
+        <Collapsible key={group.path} defaultOpen className="rounded-md border border-border">
+          <CollapsibleTrigger className="group flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-accent">
+            <ChevronRight className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-90" />
+            <span className="text-sm font-medium">{fileLabel(group.path)}</span>
+            <span className="truncate text-xs text-muted-foreground">{group.path}</span>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {group.hunks.map((hunk, index) => (
+              <div key={`${hunk.filePath}:${hunk.newStart}:${index}`} className="mx-3 mb-3">
+                <div className="mb-1.5 text-[11px] text-muted-foreground">
+                  L{hunk.oldStart}–{hunk.oldStart + hunk.oldLines} → L{hunk.newStart}–{hunk.newStart + hunk.newLines}
+                </div>
+                <pre
+                  className="overflow-x-auto border border-border bg-background p-2.5 font-mono text-xs leading-relaxed whitespace-pre"
+                  style={{ fontFamily: 'var(--vscode-editor-font-family, ui-monospace, monospace)' }}
+                  dangerouslySetInnerHTML={{ __html: highlightDiff(hunk.content) }}
+                />
+              </div>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      ))}
     </div>
   );
+}
+
+function groupHunks(hunks: DiffHunk[]): Array<{ path: string; hunks: DiffHunk[] }> {
+  const groups: Array<{ path: string; hunks: DiffHunk[] }> = [];
+  for (const hunk of hunks) {
+    const last = groups[groups.length - 1];
+    if (last && last.path === hunk.filePath) {
+      last.hunks.push(hunk);
+    } else {
+      groups.push({ path: hunk.filePath, hunks: [hunk] });
+    }
+  }
+  return groups;
 }
 
 function highlightDiff(content: string): string {
@@ -65,9 +81,9 @@ function highlightDiff(content: string): string {
       if (line.startsWith('@@')) {
         return `<span class="diff-hunk-header">${escaped}</span>`;
       }
-      return `<span class="diff-context">${escaped}</span>`;
+      return `<span>${escaped}</span>`;
     })
-    .join('\n');
+    .join('');
 }
 
 function escapeHtml(text: string): string {

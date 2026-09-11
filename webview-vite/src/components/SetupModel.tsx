@@ -1,4 +1,9 @@
 import { FormEvent, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from 'cn';
 import { ModelProvider, ModelSetupInfo } from '../types';
 
 interface SetupModelProps {
@@ -64,85 +69,92 @@ function SetupModel({ setup, error, onSave, onOpenUrl, onCancel }: SetupModelPro
   const inCursor = setup.host === 'cursor';
 
   return (
-    <div className="setup-card">
-      <h2>Set a model</h2>
-      <p className="setup-copy">
-        {inCursor
-          ? 'Cursor does not share its chat models with extensions. Paste a Gemini API key from Google AI Studio — no OpenAI credits needed.'
-          : setup.hasEditorModels
-            ? 'Use GitHub Copilot, or paste an API key if you want a specific provider.'
-            : 'Sign in to GitHub Copilot, or paste a Gemini API key from Google AI Studio.'}
-      </p>
-      <div className="setup-providers">
-        {providers.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`setup-provider ${provider === item.id ? 'selected' : ''}`}
-            onClick={() => selectProvider(item.id)}
-          >
-            <span>{item.label}</span>
-            <small>{item.hint}</small>
-          </button>
-        ))}
-      </div>
+    <Card className="w-full max-w-lg">
+      <CardHeader>
+        <CardTitle>Set a model</CardTitle>
+        <CardDescription>
+          {inCursor
+            ? 'Cursor does not share its chat models with extensions. Paste a Gemini API key from Google AI Studio — no OpenAI credits needed.'
+            : setup.hasEditorModels
+              ? 'Use GitHub Copilot, or paste an API key if you want a specific provider.'
+              : 'Sign in to GitHub Copilot, or paste a Gemini API key from Google AI Studio.'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="grid gap-4" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-2">
+            {providers.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={cn(
+                  'flex flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left text-sm',
+                  provider === item.id
+                    ? 'border-ring bg-accent'
+                    : 'border-border bg-background hover:bg-accent/70'
+                )}
+                onClick={() => selectProvider(item.id)}
+              >
+                <span>{item.label}</span>
+                <small className="text-[11px] text-muted-foreground">{item.hint}</small>
+              </button>
+            ))}
+          </div>
 
-      <form className="setup-form" onSubmit={handleSubmit}>
-        {provider !== 'vscode' && (
-          <>
-            <label className="setup-label">
-              API key
-              <input
-                type="password"
-                autoComplete="off"
-                value={apiKey}
-                onChange={(event) => setApiKey(event.target.value)}
-                placeholder={keyPlaceholder(provider)}
-              />
-            </label>
-            <button
-              type="button"
-              className="setup-link"
-              onClick={() => onOpenUrl(PROVIDER_LINKS[provider])}
-            >
-              {keyLinkLabel(provider)}
-            </button>
-            <label className="setup-label">
-              Model
-              <input
-                type="text"
-                value={model}
-                onChange={(event) => setModel(event.target.value)}
-              />
-            </label>
-            {provider === 'openai' && (
-              <label className="setup-label">
-                Base URL <span className="setup-optional">(optional)</span>
-                <input
-                  type="text"
-                  value={baseUrl}
-                  onChange={(event) => setBaseUrl(event.target.value)}
-                  placeholder={setup.defaults.openai.baseUrl}
+          {provider !== 'vscode' && (
+            <>
+              <div className="grid gap-2">
+                <Label htmlFor="api-key">API key</Label>
+                <Input
+                  id="api-key"
+                  type="password"
+                  autoComplete="off"
+                  value={apiKey}
+                  placeholder={keyPlaceholder(provider)}
+                  onChange={(event) => setApiKey(event.target.value)}
                 />
-              </label>
-            )}
-          </>
-        )}
-
-        {error && <p className="setup-error">{error}</p>}
-
-        <div className="setup-actions">
-          {onCancel && (
-            <button type="button" className="btn btn-secondary" onClick={onCancel}>
-              Cancel
-            </button>
+              </div>
+              <Button type="button" variant="link" className="h-auto justify-start px-0" onClick={() => onOpenUrl(PROVIDER_LINKS[provider])}>
+                {keyLinkLabel(provider)}
+              </Button>
+              <div className="grid gap-2">
+                <Label htmlFor="model">Model</Label>
+                <Input
+                  id="model"
+                  value={model}
+                  onChange={(event) => setModel(event.target.value)}
+                />
+              </div>
+              {provider === 'openai' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="base-url">Base URL</Label>
+                  <Input
+                    id="base-url"
+                    value={baseUrl}
+                    placeholder={setup.defaults.openai.baseUrl}
+                    onChange={(event) => setBaseUrl(event.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">Optional</p>
+                </div>
+              )}
+            </>
           )}
-          <button type="submit" className="btn btn-primary">
-            {provider === 'vscode' ? 'Use editor model' : 'Save and continue'}
-          </button>
-        </div>
-      </form>
-    </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <CardFooter className="justify-end gap-2 px-0">
+            {onCancel && (
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+            )}
+            <Button type="submit">
+              {provider === 'vscode' ? 'Use editor model' : 'Save and continue'}
+            </Button>
+          </CardFooter>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
