@@ -1,7 +1,7 @@
 import { FileSymbolMap } from './symbolMapper';
 import { ImportBinding } from './imports';
 import { SymbolInfo } from './treeSitter';
-import { isJavaScriptFamily } from './languages';
+import { grammarFromPath, isDirectoryPackage } from './languages';
 
 export interface CallGraph {
   nodes: Map<string, SymbolInfo>;
@@ -69,7 +69,6 @@ function findFunctionCalls(
 ): string[] {
   const calls: string[] = [];
   const bindingByLocal = new Map(bindings.map((binding) => [binding.localName, binding]));
-  const allowHops = isJavaScriptFamily(fileMap.filePath);
 
   const resolveName = (name: string): string | undefined => {
     const local = fileMap.postSymbols.find((candidate) => candidate.name === name && candidate.id !== symbol.id);
@@ -77,8 +76,11 @@ function findFunctionCalls(
       return local.id;
     }
 
-    if (!allowHops) {
-      return undefined;
+    if (isDirectoryPackage(fileMap.filePath)) {
+      const peer = findDirectoryPeer(name, fileMap.filePath, symbolsByFile);
+      if (peer && peer.id !== symbol.id) {
+        return peer.id;
+      }
     }
 
     const binding = bindingByLocal.get(name);
@@ -175,6 +177,31 @@ function calleeName(
     return property?.text;
   }
   return functionNode.text?.includes('.') ? undefined : functionNode.text;
+}
+
+function findDirectoryPeer(
+  name: string,
+  filePath: string,
+  symbolsByFile: Map<string, SymbolInfo[]>
+): SymbolInfo | undefined {
+  const dir = posixDirname(filePath);
+  const grammar = grammarFromPath(filePath);
+  for (const [path, symbols] of symbolsByFile) {
+    if (path === filePath || posixDirname(path) !== dir || grammarFromPath(path) !== grammar) {
+      continue;
+    }
+    const match = symbols.find((candidate) => candidate.name === name);
+    if (match) {
+      return match;
+    }
+  }
+  return undefined;
+}
+
+function posixDirname(filePath: string): string {
+  const parts = filePath.split('/');
+  parts.pop();
+  return parts.join('/') || '.';
 }
 
 function findImportedSymbol(symbols: SymbolInfo[], binding: ImportBinding): SymbolInfo | undefined {

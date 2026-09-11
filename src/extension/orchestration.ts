@@ -5,7 +5,7 @@ import { parseDiff } from './parser/diffParser';
 import { initializeTreeSitter } from './parser/treeSitter';
 import { FileSymbolMap, mapContextFiles, mapHunksToSymbols } from './parser/symbolMapper';
 import { buildCallGraph, buildDependencyMap } from './parser/callGraph';
-import { hopCandidatePaths, resolveBindings } from './parser/imports';
+import { hopCandidatePaths, hopFileStem, resolveBindings } from './parser/imports';
 import { fetchRepoFiles } from './github/fetchContext';
 import { MAX_CONTEXT_FILES, MAX_FILES, MAX_PROMPT_DIFFS, WARN_HUNKS } from './limits';
 import { callLLM } from './llm/client';
@@ -253,7 +253,7 @@ async function attachOneHopContext(
   const foundStems = new Set<string>();
 
   for (const file of extraFiles) {
-    const stem = file.path.replace(/\.(tsx?|jsx?|mts|cts|mjs|cjs)$/, '').replace(/\/index$/, '');
+    const stem = hopFileStem(file.path);
     if (foundStems.has(stem) || unique.length >= MAX_CONTEXT_FILES) {
       continue;
     }

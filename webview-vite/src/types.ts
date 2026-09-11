@@ -3,14 +3,16 @@ export interface FileContents {
   postContent: string;
 }
 
+export interface PRMetadata {
+  title: string;
+  url: string;
+  owner: string;
+  repo: string;
+  prNumber: number;
+}
+
 export interface WebviewData {
-  prMetadata: {
-    title: string;
-    url: string;
-    owner: string;
-    repo: string;
-    prNumber: number;
-  };
+  prMetadata: PRMetadata;
   summary: string;
   howToReview: string;
   chapters: WalkthroughChapter[];

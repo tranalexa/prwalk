@@ -107,4 +107,18 @@ describe('buildCallGraph', () => {
       ['src/main.ts:main->src/helper.ts:helper']
     );
   });
+
+  it('draws a Go same-package edge without imports', () => {
+    const hello = symbol('cmd/hello.go:Hello', 'Hello', 'cmd/hello.go');
+    const main = symbol('cmd/main.go:main', 'main', 'cmd/main.go', 'Hello');
+    const maps = [
+      fileMap('cmd/hello.go', [hello]),
+      fileMap('cmd/main.go', [main]),
+    ];
+
+    const graph = buildCallGraph(maps, resolveBindings(maps, maps.map((file) => file.filePath)));
+    assert.deepEqual(graph.edges, [
+      { from: 'cmd/main.go:main', to: 'cmd/hello.go:Hello', type: 'call' },
+    ]);
+  });
 });

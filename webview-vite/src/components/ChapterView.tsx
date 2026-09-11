@@ -1,15 +1,19 @@
 import { ChevronRight } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FileContents, WalkthroughChapter, DiffHunk } from '../types';
+import GitHubLink from '@/components/GitHubLink';
+import { githubFileUrl, githubHunkUrl, hunkRangeLabel } from '../githubLinks';
+import { FileContents, PRMetadata, WalkthroughChapter, DiffHunk } from '../types';
 import { fileLabel } from '../reviewSteps';
 
 interface ChapterViewProps {
   chapter: WalkthroughChapter;
   hunks: DiffHunk[];
   files: Record<string, FileContents>;
+  prMetadata: PRMetadata;
+  onOpenUrl: (url: string) => void;
 }
 
-function ChapterView({ chapter, hunks }: ChapterViewProps) {
+function ChapterView({ chapter, hunks, prMetadata, onOpenUrl }: ChapterViewProps) {
   const chapterHunks = chapter.hunkIndices
     .map((index) => hunks[index])
     .filter((hunk): hunk is DiffHunk => Boolean(hunk));
@@ -31,15 +35,31 @@ function ChapterView({ chapter, hunks }: ChapterViewProps) {
         <Collapsible key={group.path} defaultOpen className="rounded-md border border-border">
           <CollapsibleTrigger className="group flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-accent">
             <ChevronRight className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-90" />
-            <span className="text-sm font-medium">{fileLabel(group.path)}</span>
-            <span className="truncate text-xs text-muted-foreground">{group.path}</span>
+            <GitHubLink
+              href={githubFileUrl(prMetadata, group.path)}
+              onOpen={onOpenUrl}
+              className="text-sm font-medium"
+            >
+              {fileLabel(group.path)}
+            </GitHubLink>
+            <GitHubLink
+              href={githubFileUrl(prMetadata, group.path)}
+              onOpen={onOpenUrl}
+              className="min-w-0 flex-1 truncate text-xs text-muted-foreground"
+            >
+              {group.path}
+            </GitHubLink>
           </CollapsibleTrigger>
           <CollapsibleContent>
             {group.hunks.map((hunk, index) => (
               <div key={`${hunk.filePath}:${hunk.newStart}:${index}`} className="mx-3 mb-3">
-                <div className="mb-1.5 text-[11px] text-muted-foreground">
-                  L{hunk.oldStart}–{hunk.oldStart + hunk.oldLines} → L{hunk.newStart}–{hunk.newStart + hunk.newLines}
-                </div>
+                <GitHubLink
+                  href={githubHunkUrl(prMetadata, hunk)}
+                  onOpen={onOpenUrl}
+                  className="mb-1.5 text-[11px] text-muted-foreground"
+                >
+                  {hunkRangeLabel(hunk)}
+                </GitHubLink>
                 <pre
                   className="overflow-x-auto border border-border bg-background p-2.5 font-mono text-xs leading-relaxed whitespace-pre"
                   style={{ fontFamily: 'var(--vscode-editor-font-family, ui-monospace, monospace)' }}

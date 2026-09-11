@@ -10,7 +10,7 @@ const ROOT = path.join(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
 const PACK_OUT = path.join(ROOT, 'node_modules', 'tree-sitter-wasm', 'out');
 const CORE_WASM = path.join(DIST, 'web-tree-sitter.wasm');
-const SHIPPED = ['javascript', 'typescript', 'tsx', 'python', 'go'];
+const SHIPPED = ['javascript', 'typescript', 'tsx', 'python', 'go', 'rust', 'java', 'ruby', 'php', 'c', 'cpp'];
 
 function copyFile(src, dest) {
   fs.mkdirSync(path.dirname(dest), { recursive: true });

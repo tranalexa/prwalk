@@ -83,3 +83,37 @@ pre > span {
   color: var(--muted-foreground);
   font-weight: 600;
 }
+
+.github-pr-link,
+.github-pr-link:visited,
+.github-pr-link:hover,
+.github-pr-link:active {
+  color: inherit;
+}
+
+.loading-dog {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  color: var(--foreground);
+  pointer-events: none;
+  transition: left 400ms ease;
+}
+
+.loading-dog-run {
+  animation: dog-bob 0.32s ease-in-out infinite;
+}
+
+.loading-dog-sit {
+  animation: none;
+}
+
+@keyframes dog-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}

@@ -1,5 +1,7 @@
 const EXTENSION_TO_GRAMMAR: Record<string, string> = {
   ada: 'ada',
+  ino: 'arduino',
+  bib: 'bibtex',
   c: 'c',
   h: 'c',
   cc: 'cpp',
@@ -12,17 +14,22 @@ const EXTENSION_TO_GRAMMAR: Record<string, string> = {
   clj: 'clojure',
   cljs: 'clojure',
   cmake: 'cmake',
+  lisp: 'commonlisp',
+  lsp: 'commonlisp',
+  cl: 'commonlisp',
   css: 'css',
   cu: 'cuda',
   d: 'd',
   dart: 'dart',
   dockerfile: 'dockerfile',
+  el: 'elisp',
   ex: 'elixir',
   exs: 'elixir',
   erl: 'erlang',
   hrl: 'erlang',
   fish: 'fish',
   gd: 'gdscript',
+  gdshader: 'gdshader',
   gleam: 'gleam',
   go: 'go',
   groovy: 'groovy',
@@ -41,6 +48,7 @@ const EXTENSION_TO_GRAMMAR: Record<string, string> = {
   lua: 'lua',
   md: 'markdown_inline',
   mdx: 'markdown_inline',
+  nix: 'nix',
   m: 'objc',
   mm: 'objc',
   ml: 'ocaml',
@@ -51,11 +59,14 @@ const EXTENSION_TO_GRAMMAR: Record<string, string> = {
   py: 'python',
   pyi: 'python',
   r: 'r',
+  rkt: 'racket',
+  rktd: 'racket',
   rb: 'ruby',
   rs: 'rust',
   scala: 'scala',
   sc: 'scala',
   scm: 'query',
+  sln: 'sln',
   sh: 'bash',
   bash: 'bash',
   zsh: 'bash',
@@ -72,7 +83,23 @@ const EXTENSION_TO_GRAMMAR: Record<string, string> = {
   zig: 'zig',
 };
 
-const JS_GRAMMARS = new Set(['javascript', 'typescript', 'tsx']);
+const JS_GRAMMARS = new Set(['javascript', 'typescript', 'tsx', 'svelte']);
+const DIRECTORY_PACKAGE_GRAMMARS = new Set(['go']);
+
+export type HopFamily =
+  | 'javascript'
+  | 'python'
+  | 'go'
+  | 'rust'
+  | 'jvm'
+  | 'c'
+  | 'ruby'
+  | 'php'
+  | 'lua'
+  | 'elixir'
+  | 'gleam'
+  | 'ocaml'
+  | 'none';
 
 /** Typescript/TSX tags.scm only add TS-specific nodes; they inherit JS tags. */
 export const TAG_INHERITS: Record<string, string[]> = {
@@ -100,4 +127,84 @@ export function grammarFromPath(filePath: string): string | undefined {
 export function isJavaScriptFamily(filePath: string): boolean {
   const grammar = grammarFromPath(filePath);
   return grammar !== undefined && JS_GRAMMARS.has(grammar);
+}
+
+export function isDirectoryPackage(filePath: string): boolean {
+  const grammar = grammarFromPath(filePath);
+  return grammar !== undefined && DIRECTORY_PACKAGE_GRAMMARS.has(grammar);
+}
+
+export function hopFamily(filePath: string): HopFamily {
+  const grammar = grammarFromPath(filePath);
+  switch (grammar) {
+    case 'javascript':
+    case 'typescript':
+    case 'tsx':
+    case 'svelte':
+      return 'javascript';
+    case 'python':
+      return 'python';
+    case 'go':
+      return 'go';
+    case 'rust':
+      return 'rust';
+    case 'java':
+    case 'scala':
+    case 'c_sharp':
+    case 'dart':
+      return 'jvm';
+    case 'c':
+    case 'cpp':
+    case 'arduino':
+      return 'c';
+    case 'ruby':
+      return 'ruby';
+    case 'php':
+    case 'php_only':
+      return 'php';
+    case 'lua':
+      return 'lua';
+    case 'elixir':
+      return 'elixir';
+    case 'gleam':
+      return 'gleam';
+    case 'ocaml':
+    case 'ocaml_interface':
+      return 'ocaml';
+    default:
+      return 'none';
+  }
+}
+
+export function hopExtensions(filePath: string): string[] {
+  switch (hopFamily(filePath)) {
+    case 'javascript':
+      return ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts', '.mjs', '.cjs'];
+    case 'python':
+      return ['.py', '.pyi'];
+    case 'go':
+      return ['.go'];
+    case 'rust':
+      return ['.rs'];
+    case 'jvm':
+      return ['.java', '.scala', '.sc', '.cs', '.dart'];
+    case 'c':
+      return ['.h', '.c', '.hh', '.hpp', '.cc', '.cpp', '.cxx', '.ino'];
+    case 'ruby':
+      return ['.rb'];
+    case 'php':
+      return ['.php'];
+    case 'lua':
+      return ['.lua'];
+    case 'elixir':
+      return ['.ex', '.exs'];
+    case 'gleam':
+      return ['.gleam'];
+    case 'ocaml':
+      return ['.ml', '.mli'];
+    default: {
+      const grammar = grammarFromPath(filePath);
+      return grammar ? [`.${filePath.split('.').pop()}`] : [];
+    }
+  }
 }

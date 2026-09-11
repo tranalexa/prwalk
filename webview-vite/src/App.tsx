@@ -25,11 +25,30 @@ function App() {
 
   useEffect(() => {
     if (import.meta.env.DEV && !getVsCodeApi()) {
+      if (new URLSearchParams(window.location.search).has('loading')) {
+        setLoading(true);
+        setLoadingProgress(12);
+        setLoadingStage('Walking the PR…');
+        return;
+      }
       setData(demoData);
       setSelectedChapterId(demoData.chapters[0].id);
       setModelLabel('gemini');
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || getVsCodeApi()) {
+      return;
+    }
+    if (!new URLSearchParams(window.location.search).has('loading')) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setLoadingProgress((value) => (value >= 96 ? 8 : value + 6));
+    }, 280);
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -166,6 +185,8 @@ function App() {
               chapter={selectedChapter}
               hunks={data.hunks}
               files={data.files}
+              prMetadata={data.prMetadata}
+              onOpenUrl={(url) => sendMessage({ type: 'openUrl', url })}
             />
           )}
         </ResizablePanel>

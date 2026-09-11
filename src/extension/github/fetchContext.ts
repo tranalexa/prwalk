@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { GITHUB_CONTENT_CONCURRENCY, MAX_CONTEXT_FILES } from '../limits';
 import { mapPool } from '../../utils/mapPool';
 import { log } from '../log';
+import { hopFileStem } from '../parser/imports';
 
 export async function fetchRepoFiles(
   context: vscode.ExtensionContext,
@@ -34,7 +35,7 @@ export async function fetchRepoFiles(
     queued,
     GITHUB_CONTENT_CONCURRENCY,
     async (candidate) => {
-      if (found.length >= MAX_CONTEXT_FILES || foundStems.has(fileStem(candidate))) {
+      if (found.length >= MAX_CONTEXT_FILES || foundStems.has(hopFileStem(candidate))) {
         completed += 1;
         onFileProgress?.(completed, queued.length);
         return;
@@ -52,7 +53,7 @@ export async function fetchRepoFiles(
           return;
         }
 
-        const stem = fileStem(candidate);
+        const stem = hopFileStem(candidate);
         if (foundStems.has(stem) || found.length >= MAX_CONTEXT_FILES) {
           return;
         }
@@ -77,6 +78,3 @@ export async function fetchRepoFiles(
   return extra;
 }
 
-function fileStem(filePath: string): string {
-  return filePath.replace(/\.(tsx?|jsx?|mts|cts|mjs|cjs)$/, '').replace(/\/index$/, '');
-}

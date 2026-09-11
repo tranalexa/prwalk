@@ -64,4 +64,51 @@ describe('import path resolution', () => {
     assert.equal(stripQuotes("'./greet'"), './greet');
     assert.equal(stripQuotes('"./greet"'), './greet');
   });
+
+  it('resolves Python relative and dotted modules', () => {
+    assert.equal(
+      resolveModulePath('pkg/main.py', './greet', ['pkg/main.py', 'pkg/greet.py']),
+      'pkg/greet.py'
+    );
+    assert.equal(
+      resolveModulePath('pkg/main.py', 'pkg.util', ['pkg/main.py', 'pkg/util.py']),
+      'pkg/util.py'
+    );
+  });
+
+  it('resolves a Go import path to every file in that package dir', () => {
+    const known = ['cmd/main.go', 'pkg/greet/greet.go', 'pkg/greet/format.go'];
+    const bindings = resolveBindings(
+      [
+        {
+          filePath: 'cmd/main.go',
+          imports: [{ localName: 'greet', importedName: '*', specifier: 'pkg/greet' }],
+        },
+      ],
+      known
+    );
+    assert.deepEqual(
+      (bindings.get('cmd/main.go') || []).map((binding) => binding.path).sort(),
+      ['pkg/greet/format.go', 'pkg/greet/greet.go']
+    );
+  });
+
+  it('resolves Rust mod, Java import, and quoted C includes', () => {
+    assert.equal(
+      resolveModulePath('src/main.rs', './greet', ['src/main.rs', 'src/greet.rs']),
+      'src/greet.rs'
+    );
+    assert.equal(
+      resolveModulePath(
+        'src/App.java',
+        'com/acme/Greeter',
+        ['src/App.java', 'com/acme/Greeter.java']
+      ),
+      'com/acme/Greeter.java'
+    );
+    assert.equal(
+      resolveModulePath('src/main.c', './greet.h', ['src/main.c', 'src/greet.h']),
+      'src/greet.h'
+    );
+  });
 });

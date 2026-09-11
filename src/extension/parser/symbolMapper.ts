@@ -1,8 +1,8 @@
 import { DiffHunk } from '../webview/messaging';
 import { SymbolInfo, parseFile, buildLineIndex, extractSymbols } from './treeSitter';
 import { PRFile } from '../github/types';
-import { RawImport, extractRawImports } from './imports';
-import { grammarFromPath, isJavaScriptFamily } from './languages';
+import { RawImport, extractImports } from './imports';
+import { grammarFromPath } from './languages';
 
 export interface HunkSymbolMapping {
   hunk: DiffHunk;
@@ -57,9 +57,7 @@ export async function mapHunksToSymbols(
       const tree = await parseFile(file.postContent, file.path);
       if (tree) {
         fileMap.postSymbols = extractSymbols(tree, file.path, true);
-        if (isJavaScriptFamily(file.path)) {
-          fileMap.imports = extractRawImports(tree.rootNode);
-        }
+        fileMap.imports = extractImports(file.path, tree.rootNode);
       }
     }
 
@@ -103,7 +101,7 @@ export async function mapContextFiles(files: Array<{ path: string; content: stri
       preSymbols: [],
       postSymbols: extractSymbols(tree, file.path, false),
       hunks: [],
-      imports: isJavaScriptFamily(file.path) ? extractRawImports(tree.rootNode) : [],
+      imports: extractImports(file.path, tree.rootNode),
       inPr: false,
       sourceSnippet: clipSource(file.content),
     });

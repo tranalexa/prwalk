@@ -86,9 +86,8 @@ export function extractSymbols(
     return [];
   }
 
-  const symbols: SymbolInfo[] = [];
-  const seen = new Set<string>();
-  const callRefs: Array<{ name: string; start: number; end: number }> = [];
+    const symbols: SymbolInfo[] = [];
+    const callRefs: Array<{ name: string; start: number; end: number }> = [];
 
   for (const match of query.matches(tree.rootNode)) {
     let definition: { kind: SymbolInfo['kind']; node: Node } | undefined;
@@ -121,17 +120,26 @@ export function extractSymbols(
     }
 
     const id = `${filePath}:${name}`;
-    if (seen.has(id)) {
+    const byteRange: [number, number] = [definition.node.startIndex, definition.node.endIndex];
+    const existing = symbols.find((symbol) => symbol.id === id);
+    if (existing) {
+      const existingSpan = existing.byteRange[1] - existing.byteRange[0];
+      const nextSpan = byteRange[1] - byteRange[0];
+      if (nextSpan > existingSpan) {
+        existing.kind = definition.kind;
+        existing.byteRange = byteRange;
+        existing.lineRange = [definition.node.startPosition.row + 1, definition.node.endPosition.row + 1];
+        existing.definitionNode = definition.node;
+      }
       continue;
     }
-    seen.add(id);
 
     symbols.push({
       id,
       filePath,
       name,
       kind: definition.kind,
-      byteRange: [definition.node.startIndex, definition.node.endIndex],
+      byteRange,
       lineRange: [definition.node.startPosition.row + 1, definition.node.endPosition.row + 1],
       definitionNode: definition.node,
       inPr,
@@ -210,10 +218,36 @@ function tagsSource(grammar: string): string | undefined {
   if (own) {
     parts.push(own);
   }
+  const extra = extraTagsQuery(grammar);
+  if (extra) {
+    parts.push(extra);
+  }
   if (parts.length === 0) {
     return undefined;
   }
   return parts.map(sanitizeTagsQuery).join('\n');
+}
+
+function extraTagsQuery(grammar: string): string {
+  if (grammar === 'rust') {
+    return `
+(call_expression
+  function: (scoped_identifier
+    name: (identifier) @name)) @reference.call
+`;
+  }
+  if (grammar === 'c' || grammar === 'cpp' || grammar === 'arduino') {
+    return `
+(function_definition
+  declarator: (function_declarator
+    declarator: (identifier) @name)) @definition.function
+
+(call_expression
+  (identifier) @name
+  (argument_list)) @reference.call
+`;
+  }
+  return '';
 }
 
 function readTags(grammar: string): string | undefined {
