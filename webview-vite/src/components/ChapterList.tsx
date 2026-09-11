@@ -11,10 +11,8 @@ interface ChapterListProps {
 
 function ChapterList({ chapters, selectedChapterId, onSelectChapter }: ChapterListProps) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
-      <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-        Walkthrough
-      </h3>
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">
+      <h3 className="sidebar-section-label mb-2 text-balance">Walkthrough</h3>
       <div className="flex flex-col gap-1">
         {chapters.map((chapter, index) => {
           const selected = selectedChapterId === chapter.id;
@@ -23,27 +21,24 @@ function ChapterList({ chapters, selectedChapterId, onSelectChapter }: ChapterLi
               key={chapter.id}
               type="button"
               className={cn(
-                'w-full rounded-md px-2.5 py-2 text-left transition-colors',
-                selected ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
+                'pressable w-full rounded-lg px-2.5 py-2 text-left outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring/50',
+                selected
+                  ? 'bg-primary/12 shadow-[inset_2px_0_0_0_var(--primary)]'
+                  : 'interactive-surface hover:shadow-xs'
               )}
               onClick={() => onSelectChapter(chapter.id)}
             >
               <div className="mb-1 flex items-center gap-2">
-                <Badge variant={selected ? 'secondary' : 'outline'}>{index + 1}</Badge>
-                <span className="min-w-0 flex-1 text-sm font-semibold">{chapter.title}</span>
-                <Badge variant={selected ? 'secondary' : 'outline'}>{kindLabel(chapter.kind)}</Badge>
+                <Badge variant={selected ? 'default' : 'outline'}>{index + 1}</Badge>
+                <span className="min-w-0 flex-1 text-sm font-semibold text-balance">{chapter.title}</span>
+                <Badge variant="outline">{kindLabel(chapter.kind)}</Badge>
               </div>
               {chapter.briefing && (
-                <p className={cn(
-                  'mb-1 line-clamp-3 text-xs leading-relaxed',
-                  selected ? 'opacity-90' : 'text-muted-foreground'
-                )}>
+                <p className="mb-1 line-clamp-3 text-xs leading-relaxed text-pretty text-muted-foreground">
                   {chapter.briefing}
                 </p>
               )}
-              <div className={cn('text-[11px]', selected ? 'opacity-80' : 'text-primary')}>
-                {fileSummary(chapter.filePaths)}
-              </div>
+              <div className="text-[11px] text-muted-foreground">{fileSummary(chapter.filePaths)}</div>
             </button>
           );
         })}

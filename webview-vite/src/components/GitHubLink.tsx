@@ -21,7 +21,7 @@ function GitHubLink({ href, onOpen, children, className }: GitHubLinkProps) {
       href={href}
       onClick={handleClick}
       className={cn(
-        'github-pr-link group/github-link inline-flex max-w-full items-center gap-0.5 rounded-sm',
+        'github-pr-link inline-flex max-w-full items-center gap-0.5 rounded-sm',
         'no-underline hover:underline',
         className
       )}
@@ -29,7 +29,8 @@ function GitHubLink({ href, onOpen, children, className }: GitHubLinkProps) {
     >
       <span className="min-w-0 truncate">{children}</span>
       <ArrowUpRight
-        className="size-3 shrink-0 opacity-60"
+        className="github-pr-link-icon size-3 shrink-0 opacity-60 transition-opacity duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+        strokeWidth={1.5}
         aria-hidden="true"
       />
     </a>

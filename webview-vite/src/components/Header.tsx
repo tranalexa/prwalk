@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { GitPullRequest } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -40,33 +41,40 @@ function Header({ prMetadata, modelLabel, onRegenerate, onCustomize, onChangeMod
   };
 
   return (
-    <header className="flex items-center justify-between gap-3 border-b border-border bg-muted px-3 py-2">
-      <div className="flex min-w-0 items-center gap-3">
-        <h1 className="shrink-0 text-sm font-semibold">PR Walk</h1>
-        {prMetadata && (
-          <span className="truncate text-xs text-muted-foreground" title={prMetadata.title}>
-            {prMetadata.owner}/{prMetadata.repo}#{prMetadata.prNumber}
-            <span className="ml-2 text-foreground">{prMetadata.title}</span>
+    <header className="border-b border-border bg-background px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="flex shrink-0 items-center gap-1.5 text-[13px] font-semibold text-balance">
+          <GitPullRequest className="size-3.5 text-primary" strokeWidth={2} aria-hidden="true" />
+          PR Walk
+        </h1>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {onChangeModel && (
+            <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={onChangeModel} title="Change model">
+              {modelLabel || 'Set model'}
+            </Button>
+          )}
+          {prMetadata && onRegenerate && onCustomize && (
+            <>
+              <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setCustomOpen(true)}>
+                Customize
+              </Button>
+              <Button size="sm" className="h-7 px-2 text-xs" onClick={onRegenerate}>
+                Regenerate
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+      {prMetadata && (
+        <p className="mt-1 truncate text-[11px] leading-snug text-muted-foreground" title={prMetadata.title}>
+          <span className="text-foreground/90">
+            {prMetadata.owner}/{prMetadata.repo}#
+            <span className="tabular-nums">{prMetadata.prNumber}</span>
           </span>
-        )}
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        {onChangeModel && (
-          <Button variant="outline" size="sm" onClick={onChangeModel} title="Change model">
-            {modelLabel || 'Set model'}
-          </Button>
-        )}
-        {prMetadata && onRegenerate && onCustomize && (
-          <>
-            <Button variant="outline" size="sm" onClick={() => setCustomOpen(true)}>
-              Customize
-            </Button>
-            <Button size="sm" onClick={onRegenerate}>
-              Regenerate
-            </Button>
-          </>
-        )}
-      </div>
+          <span className="mx-1.5 opacity-40">·</span>
+          <span>{prMetadata.title}</span>
+        </p>
+      )}
 
       <Dialog open={customOpen} onOpenChange={setCustomOpen}>
         <DialogContent>

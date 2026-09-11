@@ -20,7 +20,13 @@
   --border: var(--vscode-widget-border, #3c3c3c);
   --input: var(--vscode-input-border, var(--vscode-widget-border, #3c3c3c));
   --ring: var(--vscode-focusBorder, #007acc);
+  --sidebar-section: var(--vscode-sideBarSectionHeader-foreground, var(--muted-foreground));
   --radius: 0.5rem;
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --duration-press: 140ms;
+  --duration-open: 220ms;
+  --duration-close: 160ms;
+  --image-outline: oklch(1 0 0 / 0.1);
 }
 
 @theme inline {
@@ -60,6 +66,9 @@ body {
   font-family: var(--vscode-font-family, ui-sans-serif, system-ui, sans-serif);
   font-size: var(--vscode-font-size, 13px);
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-wrap: pretty;
 }
 
 pre .diff-add,
@@ -91,13 +100,82 @@ pre > span {
   color: inherit;
 }
 
+.sidebar-section-label {
+  color: var(--sidebar-section);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  text-transform: none;
+}
+
+.pressable {
+  transition: transform var(--duration-press) var(--ease-out-strong);
+}
+
+.pressable:hover:not(:active) {
+  transform: translateY(-1px);
+}
+
+.pressable:active {
+  transform: scale(0.96);
+}
+
+.pixel-image {
+  outline: 1px solid var(--image-outline);
+  transition:
+    opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+    transform 300ms cubic-bezier(0.2, 0, 0, 1),
+    filter 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.pixel-image-hidden {
+  filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.25);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .interactive-surface:hover {
+    background-color: var(--accent);
+  }
+
+  .github-pr-link:hover .github-pr-link-icon {
+    opacity: 1;
+  }
+}
+
+.motion-chevron {
+  transition: transform var(--duration-press) var(--ease-out-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable,
+  .motion-chevron,
+  .loading-dog,
+  .pixel-image {
+    transition: none;
+  }
+
+  .loading-dog-run {
+    animation: none;
+  }
+
+  .pixel-image-hidden {
+    filter: none;
+    opacity: 0;
+    transform: none;
+  }
+}
+
 .loading-dog {
   position: absolute;
   top: 0;
   z-index: 1;
   color: var(--foreground);
   pointer-events: none;
-  transition: left 400ms ease;
+  transition: left 280ms var(--ease-out-strong);
 }
 
 .loading-dog-run {

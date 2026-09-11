@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { GitPullRequest } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { cn } from 'cn';
 // CC0 — Jason of GDN, https://opengameart.org/content/dog-spritesheets
 import shibaWalk from '@/assets/shiba-walk-3x.gif';
 import shibaIdle from '@/assets/shiba-idle-3x.png';
@@ -34,11 +36,14 @@ function Loading({ progress = 0, stage }: LoadingProps) {
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <header className="border-b border-border bg-muted px-3 py-2">
-        <h1 className="text-sm font-semibold">PR Walk</h1>
+      <header className="border-b border-border bg-background px-3 py-2">
+        <h1 className="flex items-center gap-1.5 text-sm font-semibold text-balance">
+          <GitPullRequest className="size-3.5 text-primary" strokeWidth={2} aria-hidden="true" />
+          PR Walk
+        </h1>
       </header>
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6">
-        <p className="text-sm">{stage || 'Loading PR Walkthrough…'}</p>
+        <p className="text-sm text-pretty">{stage || 'Loading PR Walkthrough…'}</p>
         <div className="relative w-72 pt-12">
           <div
             className={`loading-dog ${finished ? 'loading-dog-sit' : 'loading-dog-run'}`}
@@ -47,18 +52,34 @@ function Loading({ progress = 0, stage }: LoadingProps) {
             }}
             aria-hidden="true"
           >
-            <img
-              src={finished ? shibaIdle : shibaWalk}
-              alt=""
-              width={DOG_WIDTH}
-              height={DOG_WIDTH}
-              className="block h-12 w-12 object-contain"
-              style={{ imageRendering: 'pixelated' }}
-            />
+            <div className="relative h-12 w-12">
+              <img
+                src={shibaWalk}
+                alt=""
+                width={DOG_WIDTH}
+                height={DOG_WIDTH}
+                className={cn(
+                  'pixel-image absolute inset-0 block h-12 w-12 object-contain',
+                  finished && 'pixel-image-hidden'
+                )}
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <img
+                src={shibaIdle}
+                alt=""
+                width={DOG_WIDTH}
+                height={DOG_WIDTH}
+                className={cn(
+                  'pixel-image absolute inset-0 block h-12 w-12 object-contain',
+                  !finished && 'pixel-image-hidden'
+                )}
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </div>
           </div>
           <Progress value={percent} className="h-2.5 w-full" />
         </div>
-        <p className="text-xs text-muted-foreground">{PUP_LINES[line]}</p>
+        <p className="text-xs text-pretty text-muted-foreground">{PUP_LINES[line]}</p>
       </div>
     </div>
   );

@@ -3,10 +3,10 @@ import { useWebviewMessage } from './hooks/useWebviewMessage';
 import { ModelSetupInfo, WebviewData } from './types';
 import Header from './components/Header';
 import ChapterList from './components/ChapterList';
+import OverviewPanel from './components/OverviewPanel';
 import ChapterView from './components/ChapterView';
 import Loading from './components/Loading';
 import SetupModel from './components/SetupModel';
-import { reviewSteps } from './reviewSteps';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { demoData } from './demoData';
 import { getVsCodeApi } from './vscodeApi';
@@ -153,32 +153,15 @@ function App() {
         onChangeModel={() => sendMessage({ type: 'configureModel' })}
       />
       <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
-        <ResizablePanel defaultSize="32" minSize="22" className="flex min-h-0 flex-col">
-          <div className="border-b border-border bg-muted px-4 py-3">
-            <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-              What changed
-            </h3>
-            <p className="text-sm leading-relaxed">{data.summary}</p>
-            {data.howToReview && (
-              <>
-                <h3 className="mt-4 mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-                  How to review
-                </h3>
-                <ol className="list-decimal space-y-1.5 pl-4 text-sm leading-relaxed">
-                  {reviewSteps(data.howToReview).map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
-              </>
-            )}
-          </div>
+        <ResizablePanel defaultSize="32" minSize="22" className="flex min-h-0 flex-col bg-background">
+          <OverviewPanel summary={data.summary} />
           <ChapterList
             chapters={data.chapters}
             selectedChapterId={selectedChapterId}
             onSelectChapter={setSelectedChapterId}
           />
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle />
         <ResizablePanel defaultSize="68" minSize="30" className="flex min-h-0 flex-col">
           {selectedChapter && (
             <ChapterView
