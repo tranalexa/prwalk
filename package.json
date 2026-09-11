@@ -1,0 +1,64 @@
+{
+  "name": "prwalk",
+  "version": "0.0.1",
+  "description": "Transform GitHub PRs into guided walkthroughs",
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "webview:build": "npm run build --prefix webview-vite",
+    "copy:wasm": "node scripts/ensure-wasm.js",
+    "build": "npm run compile && npm run webview:build && npm run copy:wasm",
+    "pretest": "npm run compile && npm run copy:wasm",
+    "lint": "eslint src --ext ts",
+    "test": "npm run compile && npm run copy:wasm && node --require ./out/test/setup.js --test ./out/test/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.137.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "octokit": "^3.2.0",
+    "tree-sitter-wasm": "^1.1.8",
+    "web-tree-sitter": "^0.27.0",
+    "zod": "^3.22.4"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:prwalk.openPR",
+    "onCommand:prwalk.setGitHubPAT",
+    "onCommand:prwalk.configureLLM"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "prwalk.openPR",
+        "title": "PR Walkthrough: Open PR"
+      },
+      {
+        "command": "prwalk.setGitHubPAT",
+        "title": "PR Walkthrough: Sign in to GitHub"
+      },
+      {
+        "command": "prwalk.configureLLM",
+        "title": "PR Walkthrough: Set Model"
+      }
+    ]
+  },
+  "keywords": [
+    "github",
+    "pull request",
+    "code review",
+    "walkthrough"
+  ],
+  "author": "",
+  "license": "MIT"
+}
